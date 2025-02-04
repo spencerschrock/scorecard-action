@@ -25,6 +25,7 @@ import (
 	"golang.org/x/net/context"
 
 	"github.com/ossf/scorecard-action/github"
+	"github.com/ossf/scorecard-action/internal/annotation"
 	scopts "github.com/ossf/scorecard/v5/options"
 )
 
@@ -107,10 +108,6 @@ func (o *Options) Validate() error {
 	fmt.Println("EnvGithubAuthToken:", EnvGithubAuthToken, os.Getenv(EnvGithubAuthToken))
 	if os.Getenv(EnvGithubAuthToken) == "" {
 		fmt.Printf("%s variable is empty.\n", EnvGithubAuthToken)
-		if o.IsForkStr == trueStr {
-			fmt.Printf("We have detected you are running on a fork.\n")
-		}
-
 		fmt.Printf(
 			"Please follow the instructions at https://github.com/ossf/scorecard-action#authentication to create the read-only PAT token.\n", //nolint:lll
 		)
@@ -121,7 +118,14 @@ func (o *Options) Validate() error {
 	if !o.isPullRequestEvent() &&
 		!o.isDefaultBranch() {
 		fmt.Printf("%s not supported with %s event.\n", o.GithubRef, o.GithubEventName)
-		fmt.Printf("::error ::Only the default branch %s is supported.\n", o.DefaultBranch)
+		msg := fmt.Sprintf("Only the default branch %s is supported.", o.DefaultBranch)
+
+		// https://github.com/ossf/scorecard-action/issues/1502
+		if o.IsForkStr == trueStr {
+			msg += " This repository is a fork, to avoid triggering the upstream's workflow, see https://github.com/ossf/scorecard-action#authentication."
+		}
+
+		annotation.Error(msg)
 
 		return errOnlyDefaultBranchSupported
 	}

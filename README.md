@@ -124,6 +124,20 @@ If the run has failed, the most likely reason is an authentication failure. Conf
 
 If you have a valid PAT saved as an encrypted secret and the run is still failing, confirm that you have not made any changes to the workflow yaml file that affected the syntax. Review the [workflow example](#workflow-example) and reset to the default values if necessary.
 
+### Forks
+
+If you have enabled GitHub Actions in a fork of a repository which uses
+Scorecard Action upstream, your fork may perform unwanted analysis as defined
+in the upstream repository. To avoid this, suggest adding the following guard
+to the upstream if not already present.
+
+```diff
+  analysis:
+    name: Scorecard analysis
+    runs-on: ubuntu-latest
++   if: github.ref_name == github.event.repository.default_branch
+```
+
 ## Manual Action Setup
 
 If you prefer to manually set up the Scorecards GitHub Action, you will need to set up a [workflow file](https://docs.github.com/en/actions/learn-github-actions/workflow-syntax-for-github-actions).
